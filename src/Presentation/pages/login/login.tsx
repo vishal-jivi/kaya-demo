@@ -1,5 +1,6 @@
-import { useTheme } from '@/Application/hooks';
-import { useState } from 'react'
+import { useAuth, useTheme } from '@/Application/hooks';
+import { useState } from 'react';
+import type { LoginCredentials } from '@/Domain/interfaces';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -7,9 +8,24 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { theme } = useTheme();
-
-  const handleSubmit = () => {
-   
+  const { login } = useAuth();
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Submitting login form with', { email, password });
+        
+    const credentials: LoginCredentials = {
+      email,
+      password,
+    };
+    
+    try {
+      await login(credentials);
+      // Handle successful login - user state will be updated automatically
+    } catch (err: any) {
+      console.error('Login failed:', err);
+      // Error is already handled by the useAuth hook
+    }
   };
 
   const cardBg = theme === 'dark' ? 'bg-gray-800' : 'bg-white';
@@ -61,8 +77,8 @@ const Login = () => {
 
         <div className={`mt-6 p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'} text-sm`}>
           <p className="font-semibold mb-2">Demo Credentials:</p>
-          <p>Editor: editor@test.com / password123</p>
-          <p>Viewer: viewer@test.com / password123</p>
+          <p>Editor: editor@test.com / qwerty</p>
+          <p>Viewer: viewer@test.com / qwerty</p>
         </div>
       </div>
     </div>

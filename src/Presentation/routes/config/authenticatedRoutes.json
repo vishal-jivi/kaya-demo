@@ -1,0 +1,16 @@
+{
+  "routes": [
+    {
+      "path": "/",
+      "element": "Dashboard",
+      "title": "Dashboard",
+      "protected": true
+    },
+    {
+      "path": "/profile",
+      "element": "Profile",
+      "title": "Profile",
+      "protected": true
+    }
+  ]
+}

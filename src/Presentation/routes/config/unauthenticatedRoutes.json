@@ -1,0 +1,22 @@
+{
+  "routes": [
+    {
+      "path": "/login",
+      "element": "Login",
+      "title": "Login",
+      "protected": false
+    },
+    {
+      "path": "/signup",
+      "element": "Signup",
+      "title": "Sign Up",
+      "protected": false
+    },
+    {
+      "path": "/forgot-password",
+      "element": "ForgotPassword",
+      "title": "Forgot Password",
+      "protected": false
+    }
+  ]
+}

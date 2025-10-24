@@ -1,6 +1,6 @@
-import AuthenticatedRoute from './AuthenticatedRoute';
-import UnauthenticatedRoute from './UnauthenticatedRoute';
 import { useFirebase } from '../../Application/contexts';
+import RouteFactory from './RouteFactory';
+import { BrowserRouter } from 'react-router';
 
 const RootRoute = () => {
   const { user, loading } = useFirebase();
@@ -10,13 +10,11 @@ const RootRoute = () => {
   }
 
   return (
+    <BrowserRouter>
     <div className="root-route">
-      {user ? (
-        <AuthenticatedRoute />
-      ) : (
-        <UnauthenticatedRoute />
-      )}
+      {<RouteFactory isAuthenticated={!!user} />}
     </div>
+    </BrowserRouter>
   );
 };
 

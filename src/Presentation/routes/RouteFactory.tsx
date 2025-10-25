@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router';
-import { Login, Signup, Dashboard, Profile, ForgotPassword } from '../pages';
+import { Login, Signup, Dashboard, Profile, ForgotPassword, Diagram } from '../pages';
 import { authenticatedRoutes, unauthenticatedRoutes, type RouteConfig } from './config';
 
 interface RouteFactoryProps {
@@ -29,6 +29,7 @@ const RouteFactory: React.FC<RouteFactoryProps> = ({ isAuthenticated }) => {
       Dashboard,
       Profile,
       ForgotPassword,
+      Diagram
     };
     return components[elementName] || (() => <div>Component not found</div>);
   };

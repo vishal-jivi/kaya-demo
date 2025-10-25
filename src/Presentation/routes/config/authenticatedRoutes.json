@@ -11,6 +11,12 @@
       "element": "Profile",
       "title": "Profile",
       "protected": true
+    },
+    {
+      "path": "/diagram",
+      "element": "Diagram",
+      "title": "Diagram",
+      "protected": true
     }
   ]
 }

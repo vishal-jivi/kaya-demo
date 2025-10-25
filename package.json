@@ -12,6 +12,7 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
+    "@xyflow/react": "^12.9.0",
     "firebase": "^12.4.0",
     "formik": "^2.4.6",
     "react": "^19.2.0",

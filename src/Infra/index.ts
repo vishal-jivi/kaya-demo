@@ -1,2 +1,15 @@
+export {
+  getAllAccessibleDiagrams,
+  getDiagram,
+  getSharedDiagrams,
+  getUserDiagrams,
+  saveDiagram,
+  updateDiagram,
+} from './diagram.service';
 export { auth, db } from './firebase';
-export { saveDataToDatabase, updateLastLogin, getUserData } from './user.service';
+export {
+  getUserData,
+  getUserIdsByEmails,
+  saveDataToDatabase,
+  updateLastLogin,
+} from './user.service';

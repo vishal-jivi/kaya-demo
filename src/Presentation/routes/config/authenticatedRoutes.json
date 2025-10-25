@@ -17,6 +17,12 @@
       "element": "Diagram",
       "title": "Diagram",
       "protected": true
+    },
+    {
+      "path": "/diagram/:id",
+      "element": "Diagram",
+      "title": "Diagram",
+      "protected": true
     }
   ]
 }

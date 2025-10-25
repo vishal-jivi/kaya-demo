@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to get current user ID
+    function getUserId() {
+      return request.auth.uid;
+    }
+    
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (getUserId() == userId || resource.data.email == request.auth.token.email);
+      allow create: if isAuthenticated() && getUserId() == userId;
+      allow update: if isAuthenticated() && getUserId() == userId;
+      allow delete: if isAuthenticated() && getUserId() == userId;
+    }
+    
+    // Diagrams collection
+    match /diagrams/{diagramId} {
+      // Helper function to check if user has access to diagram
+      function hasAccess() {
+        return resource.data.ownerId == getUserId() || 
+               getUserId() in resource.data.sharedWith;
+      }
+      
+      // Allow read if user is the owner or is in the sharedWith array
+      allow read: if isAuthenticated() && hasAccess();
+      
+      // Allow create if user is authenticated
+      allow create: if isAuthenticated() && 
+        request.resource.data.ownerId == getUserId() &&
+        request.resource.data.sharedWith is list;
+      
+      // Allow update if user is the owner
+      allow update: if isAuthenticated() && 
+        resource.data.ownerId == getUserId();
+      
+      // Allow delete if user is the owner
+      allow delete: if isAuthenticated() && 
+        resource.data.ownerId == getUserId();
+    }
+  }
+}

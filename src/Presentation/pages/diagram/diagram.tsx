@@ -175,6 +175,7 @@ const Diagram = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [diagramTitle, setDiagramTitle] = useState('My Diagram');
   const [showTitleModal, setShowTitleModal] = useState(false);
+  const [role, setRole] = useState<'owner' | 'edit' | 'view'>('owner');
   const [loading, setLoading] = useState(false);
   const { user } = useFirebase();
 
@@ -190,6 +191,14 @@ const Diagram = () => {
             setEdges(diagram.edges);
             setDiagramTitle(diagram.title);
             setSavedDiagramId(diagram.id);
+            if (diagram.ownerId === user.uid) {
+              setRole('owner');
+            } else {
+              const sharedUser = diagram.sharedWith.find(
+                (su) => su.userId === user.uid
+              );
+              setRole(sharedUser ? sharedUser.permission : 'view');
+            }
           } else {
             alert('Diagram not found');
           }
@@ -344,7 +353,7 @@ const Diagram = () => {
         <div className="flex justify-between items-center mb-6">
           <p className="text-lg">{diagramTitle}</p>
           <div className="flex gap-2">
-            <button
+            {role !== 'view' && <button
               onClick={() =>
                 savedDiagramId ? handleSave() : setShowTitleModal(true)
               }
@@ -352,8 +361,8 @@ const Diagram = () => {
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
             >
               {isSaving ? 'Saving...' : savedDiagramId ? 'Update' : 'Save'}
-            </button>
-            {savedDiagramId && (
+            </button>}
+            {savedDiagramId && role === 'owner' && (
               <button
                 onClick={() => setShowShareModal(true)}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
@@ -369,6 +378,7 @@ const Diagram = () => {
           initialEdges={edges}
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
+          role={role}
         />
         <DiagramInstructions />
       </div>

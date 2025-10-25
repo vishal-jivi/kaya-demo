@@ -6,13 +6,15 @@ interface EditableNodeProps {
   selected: boolean;
   id: string;
   onUpdateLabel: (nodeId: string, newLabel: string) => void;
+  role: 'owner' | 'edit' | 'view';
 }
 
-const EditableNode = ({ data, selected, id, onUpdateLabel }: EditableNodeProps) => {
+const EditableNode = ({ data, selected, id, onUpdateLabel, role }: EditableNodeProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [label, setLabel] = useState(data.label);
 
   const handleDoubleClick = () => {
+    if (role === 'view') return;
     console.log('Double clicked to edit node:', id);
     setIsEditing(true);
   };
@@ -37,7 +39,7 @@ const EditableNode = ({ data, selected, id, onUpdateLabel }: EditableNodeProps) 
     <div
       className={`px-4 py-2 shadow-md rounded-md bg-white border-2 border-stone-400 ${
         selected ? 'border-blue-500' : 'border-gray-300'
-      }`}
+      } ${role === 'view' ? 'cursor-default' : 'cursor-pointer'}`}
       onDoubleClick={handleDoubleClick}
     >
       <Handle type="target" position={Position.Top} />

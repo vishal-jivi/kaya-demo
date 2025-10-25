@@ -6,6 +6,7 @@ import {
   getUserIdsByEmails,
   saveDiagram,
   updateDiagram,
+  shareDiagramWithUsers,
 } from '@/Infra';
 import {
   DiagramContainer,
@@ -13,6 +14,7 @@ import {
   Header,
 } from '@/Presentation/components';
 import { useParams } from 'react-router';
+import type { PermissionLevel, SharedUser } from '@/Domain/interfaces/diagram.interface';
 
 const initialNodes: Node[] = [
   {
@@ -43,39 +45,56 @@ const initialEdges: Edge[] = [
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onShare: (emails: string[]) => void;
+  onShare: (sharedUsers: SharedUser[]) => void;
+}
+
+interface EmailWithPermission {
+  email: string;
+  permission: PermissionLevel;
 }
 
 const ShareModal = ({ isOpen, onClose, onShare }: ShareModalProps) => {
   const [emailInput, setEmailInput] = useState('');
-  const [emails, setEmails] = useState<string[]>([]);
+  const [emailsWithPermissions, setEmailsWithPermissions] = useState<EmailWithPermission[]>([]);
+  const [defaultPermission, setDefaultPermission] = useState<PermissionLevel>('view');
 
   if (!isOpen) return null;
 
   const handleAddEmail = () => {
     const trimmedEmail = emailInput.trim();
-    if (trimmedEmail && !emails.includes(trimmedEmail)) {
-      setEmails([...emails, trimmedEmail]);
+    if (trimmedEmail && !emailsWithPermissions.some(item => item.email === trimmedEmail)) {
+      setEmailsWithPermissions([...emailsWithPermissions, { email: trimmedEmail, permission: defaultPermission }]);
       setEmailInput('');
     }
   };
 
   const handleRemoveEmail = (emailToRemove: string) => {
-    setEmails(emails.filter((email) => email !== emailToRemove));
+    setEmailsWithPermissions(emailsWithPermissions.filter((item) => item.email !== emailToRemove));
+  };
+
+  const handlePermissionChange = (email: string, permission: PermissionLevel) => {
+    setEmailsWithPermissions(emailsWithPermissions.map(item => 
+      item.email === email ? { ...item, permission } : item
+    ));
   };
 
   const handleShare = () => {
-    onShare(emails);
-    setEmails([]);
+    // Pass emails and permissions to the parent component
+    onShare(emailsWithPermissions.map(item => ({ 
+      userId: '', 
+      permission: item.permission,
+      email: item.email 
+    })));
+    setEmailsWithPermissions([]);
     onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full">
+      <div className="bg-white rounded-lg p-6 max-w-lg w-full">
         <h2 className="text-xl font-semibold mb-4">Share Diagram</h2>
         <div className="mb-4">
-          <div className="flex gap-2 mb-2">
+          <div className="flex gap-2 mb-4">
             <input
               type="email"
               value={emailInput}
@@ -84,6 +103,14 @@ const ShareModal = ({ isOpen, onClose, onShare }: ShareModalProps) => {
               placeholder="Enter email address"
               className="flex-1 border border-gray-300 rounded px-3 py-2"
             />
+            <select
+              value={defaultPermission}
+              onChange={(e) => setDefaultPermission(e.target.value as PermissionLevel)}
+              className="border border-gray-300 rounded px-3 py-2"
+            >
+              <option value="view">View</option>
+              <option value="edit">Edit</option>
+            </select>
             <button
               onClick={handleAddEmail}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -91,21 +118,31 @@ const ShareModal = ({ isOpen, onClose, onShare }: ShareModalProps) => {
               Add
             </button>
           </div>
-          {emails.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {emails.map((email) => (
-                <span
-                  key={email}
-                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center gap-2"
+          {emailsWithPermissions.length > 0 && (
+            <div className="space-y-2">
+              {emailsWithPermissions.map((item) => (
+                <div
+                  key={item.email}
+                  className="bg-blue-50 border border-blue-200 rounded px-3 py-2 flex items-center justify-between"
                 >
-                  {email}
+                  <div className="flex items-center gap-3">
+                    <span className="text-blue-800 font-medium">{item.email}</span>
+                    <select
+                      value={item.permission}
+                      onChange={(e) => handlePermissionChange(item.email, e.target.value as PermissionLevel)}
+                      className="text-sm border border-gray-300 rounded px-2 py-1"
+                    >
+                      <option value="view">View</option>
+                      <option value="edit">Edit</option>
+                    </select>
+                  </div>
                   <button
-                    onClick={() => handleRemoveEmail(email)}
-                    className="text-blue-600 hover:text-blue-800"
+                    onClick={() => handleRemoveEmail(item.email)}
+                    className="text-red-600 hover:text-red-800 text-lg"
                   >
                     ×
                   </button>
-                </span>
+                </div>
               ))}
             </div>
           )}
@@ -167,11 +204,6 @@ const Diagram = () => {
 
     loadDiagram();
   }, [id, user]);
-
-  useEffect(() => {
-    console.log('Nodes updated:', nodes);
-    console.log('Edges updated:', edges);
-  }, [nodes, edges]);
 
   const handleNodesChange = (newNodes: Node[]) => {
     setNodes(newNodes);
@@ -235,38 +267,60 @@ const Diagram = () => {
     }
   };
 
-  const handleShare = async (emails: string[]) => {
+  const handleShare = async (sharedUsers: SharedUser[]) => {
     if (!user || !savedDiagramId) {
       alert('Please save the diagram first before sharing');
       return;
     }
 
     try {
-      const userIds = await getUserIdsByEmails(emails);
-
-      if (userIds.length === 0) {
-        alert('No users found with the provided email addresses.');
+      // Extract emails from sharedUsers (we need to get userIds from emails)
+      const emails = sharedUsers.map(user => user.email || '').filter(email => email);
+      
+      if (emails.length === 0) {
+        alert('Please provide at least one valid email address.');
         return;
       }
 
-      // Get current diagram data
-      const currentDiagram = await getDiagram(savedDiagramId);
+      console.log('Looking up user IDs for emails:', emails);
+      const emailToUserIdMap = await getUserIdsByEmails(emails);
 
-      if (currentDiagram) {
-        // Merge new user IDs with existing shared users
-        const updatedSharedWith = Array.from(
-          new Set([...currentDiagram.sharedWith, ...userIds]),
-        );
-
-        await updateDiagram(savedDiagramId, {
-          sharedWith: updatedSharedWith,
-        });
-
-        alert(`Diagram shared successfully with ${userIds.length} user(s)!`);
+      if (emailToUserIdMap.size === 0) {
+        alert('No users found with the provided email addresses. Please make sure the users have registered accounts.');
+        return;
       }
+
+      // Check which emails were not found
+      const notFoundEmails = emails.filter(email => !emailToUserIdMap.has(email));
+      if (notFoundEmails.length > 0) {
+        console.warn('Some emails were not found:', notFoundEmails);
+      }
+
+      // Create SharedUser objects with actual userIds
+      const sharedUsersWithIds: SharedUser[] = sharedUsers
+        .filter(sharedUser => sharedUser.email && emailToUserIdMap.has(sharedUser.email))
+        .map(sharedUser => ({
+          userId: emailToUserIdMap.get(sharedUser.email!)!,
+          permission: sharedUser.permission,
+        }));
+
+      if (sharedUsersWithIds.length === 0) {
+        alert('No valid users found to share with.');
+        return;
+      }
+
+      console.log('Sharing diagram with users:', sharedUsersWithIds);
+      await shareDiagramWithUsers(savedDiagramId, sharedUsersWithIds);
+      
+      const successMessage = notFoundEmails.length > 0 
+        ? `Diagram shared successfully with ${sharedUsersWithIds.length} user(s)! Note: ${notFoundEmails.length} email(s) were not found.`
+        : `Diagram shared successfully with ${sharedUsersWithIds.length} user(s)!`;
+      
+      alert(successMessage);
     } catch (error) {
       console.error('Error sharing diagram:', error);
-      alert('Failed to share diagram');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to share diagram: ${errorMessage}`);
     }
   };
 
@@ -311,8 +365,8 @@ const Diagram = () => {
         </div>
 
         <DiagramContainer
-          initialNodes={initialNodes}
-          initialEdges={initialEdges}
+          initialNodes={nodes}
+          initialEdges={edges}
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
         />

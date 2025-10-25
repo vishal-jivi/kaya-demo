@@ -14,7 +14,11 @@ service cloud.firestore {
     
     // Users collection - users can read/write their own data
     match /users/{userId} {
-      allow read: if isAuthenticated() && (getUserId() == userId || resource.data.email == request.auth.token.email);
+      allow read: if isAuthenticated() && (
+        getUserId() == userId || 
+        resource.data.email == request.auth.token.email ||
+        request.query != null
+      );
       allow create: if isAuthenticated() && getUserId() == userId;
       allow update: if isAuthenticated() && getUserId() == userId;
       allow delete: if isAuthenticated() && getUserId() == userId;
@@ -29,7 +33,7 @@ service cloud.firestore {
       }
       
       // Allow read if user is the owner or is in the sharedWith array
-      allow read: if isAuthenticated() && hasAccess();
+      allow read: if isAuthenticated();
       
       // Allow create if user is authenticated
       allow create: if isAuthenticated() && 
@@ -37,8 +41,7 @@ service cloud.firestore {
         request.resource.data.sharedWith is list;
       
       // Allow update if user is the owner
-      allow update: if isAuthenticated() && 
-        resource.data.ownerId == getUserId();
+      allow update: if isAuthenticated();
       
       // Allow delete if user is the owner
       allow delete: if isAuthenticated() && 

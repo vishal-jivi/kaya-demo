@@ -54,15 +54,21 @@ export const updateLastLogin = (userId: string): Promise<void> => {
 
 export const getUserIdsByEmails = async (
   emails: string[],
-): Promise<string[]> => {
+): Promise<Map<string, string>> => {
   try {
     const q = query(collection(db, 'users'), where('email', 'in', emails));
     const querySnapshot = await getDocs(q);
-    const userIds: string[] = [];
+    const emailToUserIdMap = new Map<string, string>();
+    console.log('Query Snapshot:', querySnapshot);
+    
     querySnapshot.forEach((doc) => {
-      userIds.push(doc.id);
+      const userData = doc.data();
+      if (userData.email) {
+        emailToUserIdMap.set(userData.email, doc.id);
+      }
     });
-    return userIds;
+    
+    return emailToUserIdMap;
   } catch (error) {
     console.error('Error fetching user IDs by emails:', error);
     throw new Error(

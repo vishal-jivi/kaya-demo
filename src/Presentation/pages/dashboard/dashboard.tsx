@@ -23,6 +23,7 @@ const Dashboard = () => {
     setLoading(true);
     try {
       const accessibleDiagrams = await getAllAccessibleDiagrams(user.uid);
+      console.log('Accessible Diagrams:', accessibleDiagrams);
       setDiagrams(accessibleDiagrams);
     } catch (error) {
       console.error('Error loading diagrams:', error);

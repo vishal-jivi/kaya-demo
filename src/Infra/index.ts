@@ -4,6 +4,7 @@ export {
   getSharedDiagrams,
   getUserDiagrams,
   saveDiagram,
+  shareDiagramWithUsers,
   updateDiagram,
 } from './diagram.service';
 export { auth, db } from './firebase';

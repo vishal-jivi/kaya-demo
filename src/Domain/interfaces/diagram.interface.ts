@@ -1,5 +1,13 @@
 import type { Edge, Node } from '@xyflow/react';
 
+export type PermissionLevel = 'view' | 'edit';
+
+export interface SharedUser {
+  userId: string;
+  permission: PermissionLevel;
+  email?: string; // Optional email field for sharing process
+}
+
 export interface DiagramDocument {
   id: string;
   title: string;
@@ -7,7 +15,7 @@ export interface DiagramDocument {
   edges: Edge[];
   ownerId: string;
   ownerEmail: string;
-  sharedWith: string[]; // Array of user IDs who have access
+  sharedWith: SharedUser[]; // Array of shared users with their permissions
   createdAt: number;
   updatedAt: number;
 }

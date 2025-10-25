@@ -8,7 +8,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
-import type { DiagramDocument } from '@/Domain/interfaces/diagram.interface';
+import type { DiagramDocument, SharedUser } from '@/Domain/interfaces/diagram.interface';
 import { db } from './firebase';
 
 export const saveDiagram = async (
@@ -94,20 +94,72 @@ export const getSharedDiagrams = async (
   userId: string,
 ): Promise<DiagramDocument[]> => {
   try {
-    const q = query(
-      collection(db, 'diagrams'),
-      where('sharedWith', 'array-contains', userId),
-    );
+    // Get all diagrams and filter those shared with the user
+    const q = query(collection(db, 'diagrams'));
     const querySnapshot = await getDocs(q);
     const diagrams: DiagramDocument[] = [];
+    
     querySnapshot.forEach((doc) => {
-      diagrams.push(doc.data() as DiagramDocument);
+      const diagram = doc.data() as DiagramDocument;
+      // Check if user has any permission level in sharedWith array
+      const hasAccess = diagram.sharedWith.some(
+        (sharedUser: SharedUser) => sharedUser.userId === userId
+      );
+      if (hasAccess) {
+        diagrams.push(diagram);
+      }
     });
+    
     return diagrams;
   } catch (error) {
     console.error('Error fetching shared diagrams:', error);
     throw new Error(
       `Failed to fetch shared diagrams: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
+  }
+};
+
+export const shareDiagramWithUsers = async (
+  diagramId: string,
+  sharedUsers: SharedUser[],
+): Promise<void> => {
+  try {
+    const diagramRef = doc(db, 'diagrams', diagramId);
+    const currentDiagram = await getDoc(diagramRef);
+    
+    if (!currentDiagram.exists()) {
+      throw new Error('Diagram not found');
+    }
+    
+    const diagram = currentDiagram.data() as DiagramDocument;
+    
+    // Merge new shared users with existing ones
+    const existingSharedWith = diagram.sharedWith || [];
+    const updatedSharedWith = [...existingSharedWith];
+    
+    // Add or update permissions for each user
+    sharedUsers.forEach((newSharedUser) => {
+      const existingIndex = updatedSharedWith.findIndex(
+        (existing) => existing.userId === newSharedUser.userId
+      );
+      
+      if (existingIndex >= 0) {
+        // Update existing permission
+        updatedSharedWith[existingIndex] = newSharedUser;
+      } else {
+        // Add new user
+        updatedSharedWith.push(newSharedUser);
+      }
+    });
+    
+    await updateDoc(diagramRef, {
+      sharedWith: updatedSharedWith,
+      updatedAt: Date.now(),
+    });
+  } catch (error) {
+    console.error('Error sharing diagram:', error);
+    throw new Error(
+      `Failed to share diagram: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
   }
 };

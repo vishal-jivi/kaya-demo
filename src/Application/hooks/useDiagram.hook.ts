@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import type { Edge, Node } from '@xyflow/react';
 import { useFirebase } from '@/Application/contexts';
 import {
+  deleteDiagram,
   getDiagram,
   getUserIdsByEmails,
   saveDiagram,
   updateDiagram,
   shareDiagramWithUsers,
 } from '@/Infra';
-import type { PermissionLevel, SharedUser } from '@/Domain/interfaces/diagram.interface';
+import type { SharedUser } from '@/Domain/interfaces/diagram.interface';
 
 const initialNodes: Node[] = [
   {
@@ -205,6 +206,33 @@ export const useDiagram = (diagramId?: string) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!user || !savedDiagramId) {
+      alert('No diagram to delete');
+      return false;
+    }
+
+    if (role !== 'owner') {
+      alert('Only the diagram owner can delete this diagram');
+      return false;
+    }
+
+    try {
+      await deleteDiagram(savedDiagramId);
+      alert('Diagram deleted successfully!');
+      // Reset the diagram state
+      setNodes(initialNodes);
+      setEdges(initialEdges);
+      setSavedDiagramId(null);
+      setDiagramTitle('My Diagram');
+      return true;
+    } catch (error) {
+      console.error('Error deleting diagram:', error);
+      alert('Failed to delete diagram');
+      return false;
+    }
+  };
+
   return {
     // State
     nodes,
@@ -222,5 +250,6 @@ export const useDiagram = (diagramId?: string) => {
     handleSave,
     handleSaveNew,
     handleShare,
+    handleDelete,
   };
 };

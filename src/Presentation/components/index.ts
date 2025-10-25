@@ -4,3 +4,4 @@ export { default as DiagramContainer } from './DiagramContainer';
 export { default as DiagramInstructions } from './DiagramInstructions';
 export { default as ShareModal } from './ShareModal';
 export { default as TitleModal } from './TitleModal';
+export { default as DeleteModal } from './DeleteModal';

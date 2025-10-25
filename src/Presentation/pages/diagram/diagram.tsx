@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { useDiagram } from '@/Application/hooks';
 import {
   DiagramContainer,
@@ -7,14 +7,17 @@ import {
   Header,
   ShareModal,
   TitleModal,
+  DeleteModal,
 } from '@/Presentation/components';
 import type { SharedUser } from '@/Domain/interfaces/diagram.interface';
 
 
 const Diagram = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [showShareModal, setShowShareModal] = useState(false);
   const [showTitleModal, setShowTitleModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   
   const {
     nodes,
@@ -30,6 +33,7 @@ const Diagram = () => {
     handleSave,
     handleSaveNew,
     handleShare,
+    handleDelete,
   } = useDiagram(id);
 
   const handleSaveClick = async () => {
@@ -48,6 +52,14 @@ const Diagram = () => {
 
   const handleShareClick = async (sharedUsers: SharedUser[]) => {
     await handleShare(sharedUsers);
+  };
+
+  const handleDeleteClick = async () => {
+    const result = await handleDelete();
+    if (result) {
+      setShowDeleteModal(false);
+      navigate('/dashboard');
+    }
   };
 
   if (loading) {
@@ -85,6 +97,15 @@ const Diagram = () => {
                 Share
               </button>
             )}
+            {savedDiagramId && role === 'owner' && (
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                title="Delete diagram"
+              >
+                🗑️
+              </button>
+            )}
           </div>
         </div>
 
@@ -113,6 +134,14 @@ const Diagram = () => {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         onShare={handleShareClick}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onDelete={handleDeleteClick}
+        diagramTitle={diagramTitle}
       />
     </div>
   );

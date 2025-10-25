@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -184,6 +185,18 @@ export const getAllAccessibleDiagrams = async (
     console.error('Error fetching all accessible diagrams:', error);
     throw new Error(
       `Failed to fetch diagrams: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
+  }
+};
+
+export const deleteDiagram = async (diagramId: string): Promise<void> => {
+  try {
+    const diagramRef = doc(db, 'diagrams', diagramId);
+    await deleteDoc(diagramRef);
+  } catch (error) {
+    console.error('Error deleting diagram:', error);
+    throw new Error(
+      `Failed to delete diagram: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
   }
 };

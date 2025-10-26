@@ -122,7 +122,7 @@ const Login = () => {
         <div className={`mt-6 p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'} text-sm`}>
           <p className="font-semibold mb-2">Demo Credentials:</p>
           <p>Editor: editor@test.com / qwerty</p>
-          <p>Viewer: viewer@test.com / qwerty</p>
+          <p>Viewer: viewer@test.com / qwerty</p>          
         </div>
       </div>
     </div>

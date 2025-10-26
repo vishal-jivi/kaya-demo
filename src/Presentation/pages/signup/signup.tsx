@@ -107,7 +107,6 @@ const Signup = () => {
               className={`w-full px-4 py-2 rounded-lg border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
             >
               <option value="">Select a role</option>
-              <option value="admin">Admin</option>
               <option value="editor">Editor</option>
               <option value="viewer">Viewer</option>
             </select>
@@ -137,7 +136,6 @@ const Signup = () => {
 
         <div className={`mt-6 p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'} text-sm`}>
           <p className="font-semibold mb-2">Role Descriptions:</p>
-          <p><strong>Admin:</strong> Full access to all features</p>
           <p><strong>Editor:</strong> Can create and edit diagrams</p>
           <p><strong>Viewer:</strong> Can only view diagrams</p>
         </div>

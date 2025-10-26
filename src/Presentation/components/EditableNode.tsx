@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
+import { useTheme } from '@/Application/hooks';
 
 interface EditableNodeProps {
   data: { label: string };
@@ -11,8 +12,16 @@ interface EditableNodeProps {
 }
 
 const EditableNode = ({ data, selected, id, onUpdateLabel, onDeleteNode, role }: EditableNodeProps) => {
+  const { theme } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [label, setLabel] = useState(data.label);
+
+  // Theme-aware styling
+  const nodeBg = theme === 'dark' ? 'bg-gray-800' : 'bg-white';
+  const nodeBorder = theme === 'dark' ? 'border-gray-600' : 'border-gray-300';
+  const selectedBorder = theme === 'dark' ? 'border-blue-400' : 'border-blue-500';
+  const textColor = theme === 'dark' ? 'text-white' : 'text-gray-900';
+  const inputBg = theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-transparent text-gray-900';
 
   const handleDoubleClick = () => {
     if (role === 'view') return;
@@ -46,9 +55,9 @@ const EditableNode = ({ data, selected, id, onUpdateLabel, onDeleteNode, role }:
 
   return (
     <div
-      className={`px-4 py-2 shadow-md rounded-md bg-white border-2 border-stone-400 ${
-        selected ? 'border-blue-500' : 'border-gray-300'
-      } ${role === 'view' ? 'cursor-default' : 'cursor-pointer'} relative`}
+      className={`px-4 py-2 shadow-md rounded-md ${nodeBg} border-2 ${
+        selected ? selectedBorder : nodeBorder
+      } ${role === 'view' ? 'cursor-default' : 'cursor-pointer'} relative transition-colors`}
       onDoubleClick={handleDoubleClick}
     >
       <Handle type="target" position={Position.Top} />
@@ -68,11 +77,11 @@ const EditableNode = ({ data, selected, id, onUpdateLabel, onDeleteNode, role }:
           onChange={(e) => setLabel(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
-          className="w-full bg-transparent border-none outline-none text-center"
+          className={`w-full border-none outline-none text-center ${inputBg}`}
           autoFocus
         />
       ) : (
-        <div className="text-center">{label}</div>
+        <div className={`text-center ${textColor}`}>{label}</div>
       )}
       <Handle type="source" position={Position.Bottom} />
     </div>

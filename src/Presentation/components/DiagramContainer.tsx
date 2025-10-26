@@ -17,6 +17,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import EditableNode from './EditableNode';
+import { useTheme } from '@/Application/hooks';
 
 interface DiagramContainerProps {
   nodes: Node[];
@@ -35,6 +36,11 @@ const DiagramContainer = ({
   onDeleteNode,
   role,
 }: DiagramContainerProps) => {
+  const { theme } = useTheme();
+
+  // Theme-aware styling
+  const containerBorder = theme === 'dark' ? 'border-gray-600' : 'border-gray-300';
+  const flowBg = theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50';
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -71,7 +77,7 @@ const DiagramContainer = ({
 
 
   return (
-    <div className="h-[600px] w-full border border-gray-300 rounded-lg">
+    <div className={`h-[600px] w-full border ${containerBorder} rounded-lg transition-colors`}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -80,7 +86,7 @@ const DiagramContainer = ({
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
-        className="bg-gray-50"
+        className={flowBg}
         nodesDraggable={role !== 'view'}
         nodesConnectable={role !== 'view'}
         elementsSelectable={role !== 'view'}

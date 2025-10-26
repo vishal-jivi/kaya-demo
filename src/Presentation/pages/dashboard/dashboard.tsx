@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router';
 import { Header } from '@/Presentation/components';
 import { useState, useEffect } from 'react';
 import { useFirebase } from '@/Application/contexts';
+import { useTheme } from '@/Application/hooks';
 import { getAllAccessibleDiagrams } from '@/Infra';
 import type { DiagramDocument } from '@/Domain/interfaces';
 
@@ -10,6 +11,7 @@ const Dashboard = () => {
   const [diagrams, setDiagrams] = useState<DiagramDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useFirebase();
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (user) {
@@ -50,30 +52,37 @@ const Dashboard = () => {
     });
   };
 
+  // Theme-aware styling
+  const textColor = theme === 'dark' ? 'text-white' : 'text-gray-900';
+  const secondaryTextColor = theme === 'dark' ? 'text-gray-300' : 'text-gray-600';
+  const cardBg = theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200';
+  const emptyStateBg = theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-300';
+  const emptyStateText = theme === 'dark' ? 'text-gray-400' : 'text-gray-500';
+
   return (
     <div className="dashboard">
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">My Diagrams</h1>
+          <h1 className={`text-3xl font-bold ${textColor}`}>My Diagrams</h1>
           <button
             type="button"
             onClick={handleCreateDiagram}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
             + New Diagram
           </button>
         </div>
 
         {loading ? (
-          <div className="text-center py-8">Loading diagrams...</div>
+          <div className={`text-center py-8 ${textColor}`}>Loading diagrams...</div>
         ) : diagrams.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-            <p className="text-gray-500 text-lg mb-4">No diagrams yet</p>
+          <div className={`text-center py-12 ${emptyStateBg} rounded-lg border-2 border-dashed`}>
+            <p className={`${emptyStateText} text-lg mb-4`}>No diagrams yet</p>
             <button
               type="button"
               onClick={handleCreateDiagram}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
             >
               Create Your First Diagram
             </button>
@@ -84,10 +93,10 @@ const Dashboard = () => {
               <div
                 key={diagram.id}
                 onClick={() => handleOpenDiagram(diagram.id)}
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                className={`${cardBg} border rounded-lg p-4 hover:shadow-lg transition-all cursor-pointer`}
               >
-                <h3 className="text-lg font-semibold mb-2 truncate">{diagram.title}</h3>
-                <div className="text-sm text-gray-500 space-y-1">
+                <h3 className={`text-lg font-semibold mb-2 truncate ${textColor}`}>{diagram.title}</h3>
+                <div className={`text-sm ${secondaryTextColor} space-y-1`}>
                   <div>Owner: {diagram.ownerEmail}</div>
                   <div>Modified: {formatDate(diagram.updatedAt)}</div>
                   {diagram.sharedWith.length > 0 && (

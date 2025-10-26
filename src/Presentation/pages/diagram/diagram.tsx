@@ -34,6 +34,8 @@ const Diagram = () => {
     handleSaveNew,
     handleShare,
     handleDelete,
+    addNode,
+    deleteNode,
   } = useDiagram(id);
 
   const handleSaveClick = async () => {
@@ -82,6 +84,15 @@ const Diagram = () => {
         <div className="flex justify-between items-center mb-6">
           <p className="text-lg">{diagramTitle}</p>
           <div className="flex gap-2">
+            {role !== 'view' && (
+              <button
+                onClick={addNode}
+                className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                title="Add new node"
+              >
+                + Add Node
+              </button>
+            )}
             {role !== 'view' && <button
               onClick={handleSaveClick}
               disabled={isSaving}
@@ -110,10 +121,11 @@ const Diagram = () => {
         </div>
 
         <DiagramContainer
-          initialNodes={nodes}
-          initialEdges={edges}
+          nodes={nodes}
+          edges={edges}
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
+          onDeleteNode={deleteNode}
           role={role}
         />
         <DiagramInstructions />

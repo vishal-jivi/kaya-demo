@@ -4,73 +4,79 @@ import {
   MiniMap,
   Controls,
   Background,
-  useNodesState,
-  useEdgesState,
   addEdge,
   type Connection,
   type Edge,
   type Node,
   BackgroundVariant,
   type NodeTypes,
+  type OnNodesChange,
+  type OnEdgesChange,
+  applyNodeChanges,
+  applyEdgeChanges,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import EditableNode from './EditableNode';
 
 interface DiagramContainerProps {
-  initialNodes: Node[];
-  initialEdges: Edge[];
+  nodes: Node[];
+  edges: Edge[];
   onNodesChange: (nodes: Node[]) => void;
   onEdgesChange: (edges: Edge[]) => void;
+  onDeleteNode: (nodeId: string) => void;
   role: 'owner' | 'edit' | 'view';
 }
 
 const DiagramContainer = ({ 
-  initialNodes, 
-  initialEdges, 
+  nodes, 
+  edges, 
   onNodesChange, 
   onEdgesChange,
+  onDeleteNode,
   role,
 }: DiagramContainerProps) => {
-  const [nodes, setNodes, onNodesChangeInternal] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChangeInternal] = useEdgesState(initialEdges);
 
   const onConnect = useCallback(
     (params: Connection) => {
       if (role === 'view') return;
-      setEdges((eds) => addEdge(params, eds));
+      const newEdge = addEdge(params, edges);
+      onEdgesChange(newEdge);
     },
-    [setEdges, role]
+    [edges, onEdgesChange, role]
   );
 
   const updateNodeLabel = useCallback((nodeId: string, newLabel: string) => {
     if (role === 'view') return;
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === nodeId ? { ...node, data: { ...node.data, label: newLabel } } : node
-      )
+    const updatedNodes = nodes.map((node) =>
+      node.id === nodeId ? { ...node, data: { ...node.data, label: newLabel } } : node
     );
-  }, [setNodes, role]);
+    onNodesChange(updatedNodes);
+  }, [nodes, onNodesChange, role]);
 
   const nodeTypes: NodeTypes = useMemo(() => ({
-    custom: (props: any) => <EditableNode {...props} onUpdateLabel={updateNodeLabel} role={role} />,
-  }), [updateNodeLabel, role]);
+    custom: (props: any) => <EditableNode {...props} onUpdateLabel={updateNodeLabel} onDeleteNode={onDeleteNode} role={role} />,
+  }), [updateNodeLabel, onDeleteNode, role]);
 
-  // Notify parent components of changes
-  useMemo(() => {
-    onNodesChange(nodes);
-  }, [nodes, onNodesChange]);
+  const handleNodesChange: OnNodesChange = useCallback((changes) => {
+    if (role === 'view') return;
+    const newNodes = applyNodeChanges(changes, nodes);
+    onNodesChange(newNodes);
+  }, [nodes, onNodesChange, role]);
 
-  useMemo(() => {
-    onEdgesChange(edges);
-  }, [edges, onEdgesChange]);
+  const handleEdgesChange: OnEdgesChange = useCallback((changes) => {
+    if (role === 'view') return;
+    const newEdges = applyEdgeChanges(changes, edges);
+    onEdgesChange(newEdges);
+  }, [edges, onEdgesChange, role]);
+
 
   return (
     <div className="h-[600px] w-full border border-gray-300 rounded-lg">
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={role === 'view' ? undefined : onNodesChangeInternal}
-        onEdgesChange={role === 'view' ? undefined : onEdgesChangeInternal}
+        onNodesChange={role === 'view' ? undefined : handleNodesChange}
+        onEdgesChange={role === 'view' ? undefined : handleEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
